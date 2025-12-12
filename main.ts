@@ -1,4 +1,4 @@
-import { firefox } from 'playwright';
+import {firefox} from 'playwright';
 import * as http from 'node:http';
 
 const env = process.env;
@@ -8,8 +8,14 @@ const mail = env.GRAFANA_MAIL;
 const password = env.GRAFANA_PASSWORD;
 const width = Number(env.VIEWPORT_WIDTH ?? 2560);
 const height = Number(env.VIEWPORT_HEIGHT ?? 1305);
+const quality = Number(env.VIEWPORT_HEIGHT ?? 30);
 const interval = Number(env.CAPTURE_INTERVAL ?? 10000);
 const port = Number(env.HTTP_PORT ?? 57333);
+
+if (!dashboardUrl || !mail || !password) {
+    console.error('Error: DASHBOARD_URL, GRAFANA_MAIL, and GRAFANA_PASSWORD must be set.');
+    process.exit(1);
+}
 
 (async () => {
     console.log('Launching browser...');
@@ -17,13 +23,13 @@ const port = Number(env.HTTP_PORT ?? 57333);
 
     console.log('Creating browser context...');
     const context = await browser.newContext({
-        viewport: { width, height }
+        viewport: {width, height}
     });
 
     const page = await context.newPage();
 
     console.log(`Navigating to dashboard: ${dashboardUrl}`);
-    await page.goto(dashboardUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto(dashboardUrl, {waitUntil: 'domcontentloaded', timeout: 60000});
 
     console.log('Setting localStorage...');
     await page.evaluate(() => {
@@ -50,33 +56,76 @@ const port = Number(env.HTTP_PORT ?? 57333);
         localStorage.setItem('grafana.grafana-setupguide-app.modals.plan-picker', 'false');
     });
 
-    console.log('Starting MJPEG server...');
-    const server = http.createServer(async (req, res) => {
+    console.log('Disabling animations...');
+    await page.addStyleTag({
+        content: `
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+        `
+    });
+
+    console.log('Waiting for page to redirect from login...');
+    await page.waitForFunction(
+        () => !window.location.href.includes('/auth/sign-in')
+    );
+
+    console.log('Starting shared MJPEG server...');
+    const clients: http.ServerResponse[] = [];
+    let latestFrame: Buffer | null = null;
+
+    async function captureFrame() {
+        try {
+            latestFrame = await page.screenshot({
+                type: 'jpeg',
+                quality,
+                clip: {x: 0, y: 80, width, height}
+            });
+        } catch (e) {
+            console.error('Screenshot error:', e);
+        }
+    }
+
+    await captureFrame();
+
+    setInterval(() => {
+        clients.forEach(client => sendFrame(client));
+        captureFrame()
+    }, interval);
+
+    const sendFrame = (res: http.ServerResponse) => {
+        if (!latestFrame) return;
+        try {
+            res.write(`--frame\r\nContent-Type: image/jpeg\r\nContent-Length: ${latestFrame.length}\r\n\r\n`);
+            res.write(latestFrame);
+            res.write('\r\n');
+        } catch (e) {
+            console.error('SendFrame error:', e);
+        }
+    };
+
+    const server = http.createServer((req, res) => {
         if (req.method !== 'GET') {
-            res.writeHead(405, { 'Content-Type': 'text/plain' });
+            res.writeHead(405, {'Content-Type': 'text/plain'});
             res.end('Method Not Allowed');
             return;
         }
-
-        console.log('Client connected');
 
         res.writeHead(200, {
             'Content-Type': 'multipart/x-mixed-replace; boundary=frame'
         });
 
-        while (true) {
-            const buffer = await page.screenshot({
-                type: 'jpeg',
-                quality: 60,
-                clip: { x: 0, y: 80, width, height }
-            });
+        sendFrame(res);
+        sendFrame(res);
+        clients.push(res);
 
-            res.write(`--frame\r\nContent-Type: image/jpeg\r\nContent-Length: ${buffer.length}\r\n\r\n`);
-            res.write(buffer);
-            res.write('\r\n');
-
-            await new Promise(r => setTimeout(r, interval));
-        }
+        req.on('close', () => {
+            const index = clients.indexOf(res);
+            if (index !== -1) {
+                clients.splice(index, 1);
+            }
+        });
     });
 
     server.listen(port, () => console.log(`MJPEG server started on port ${port}`));

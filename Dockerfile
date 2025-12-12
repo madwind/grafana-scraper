@@ -1,10 +1,10 @@
-FROM node:25-trixie
-ARG PLAYWRIGHT_VERSION
+FROM node:25.2.1-trixie-slim
+
 WORKDIR /app
 
-RUN npx -y playwright@${PLAYWRIGHT_VERSION} install --with-deps firefox && \
-    npm install -g tsx
+COPY package.json main.ts ./
 
-COPY main.ts .
+RUN npm install && \
+    npx playwright install --with-deps firefox
 
-CMD ["tsx", "main.ts"]
+CMD ["npm", "start"]
