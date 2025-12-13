@@ -8,7 +8,7 @@ const mail = env.GRAFANA_MAIL;
 const password = env.GRAFANA_PASSWORD;
 const width = Number(env.VIEWPORT_WIDTH ?? 2560);
 const height = Number(env.VIEWPORT_HEIGHT ?? 1305);
-const quality = Number(env.VIEWPORT_HEIGHT ?? 30);
+const quality = Number(env.QUALITY ?? 30);
 const interval = Number(env.CAPTURE_INTERVAL ?? 10000);
 const port = Number(env.HTTP_PORT ?? 57333);
 

@@ -10,12 +10,13 @@
 
 ### 📋 环境变量说明
 
-| 变量名 | 描述 (用途) | 默认值 | 必填 |
-| :--- | :--- | :--- | :--- |
-| `DASHBOARD_URL` | **目标 Grafana Dashboard 的完整 URL**。 | 无 | 是 |
-| `GRAFANA_MAIL` | Grafana 登录邮箱或用户名。 | 无 | 是 |
-| `GRAFANA_PASSWORD` | Grafana 登录密码。 | 无 | 是 |
-| `VIEWPORT_WIDTH` | 浏览器视口的宽度（截图宽度）。 | `2560` | 否 |
-| `VIEWPORT_HEIGHT` | 浏览器视口的高度（截图高度）。 | `1305` | 否 |
+| 变量名 | 描述 (用途)                                    | 默认值     | 必填 |
+| :--- |:-------------------------------------------|:--------| :--- |
+| `DASHBOARD_URL` | **目标 Grafana Dashboard 的完整 URL**。          | 无       | 是 |
+| `GRAFANA_MAIL` | Grafana 登录邮箱或用户名。                          | 无       | 是 |
+| `GRAFANA_PASSWORD` | Grafana 登录密码。                              | 无       | 是 |
+| `VIEWPORT_WIDTH` | 浏览器视口的宽度（截图宽度）。                            | `2560`  | 否 |
+| `VIEWPORT_HEIGHT` | 浏览器视口的高度（截图高度）。                            | `1305`  | 否 |
+| `QUALITY` | JPG压缩质量。                                   | `30`    | 否 |
 | `CAPTURE_INTERVAL` | **截图/帧更新间隔时间**（毫秒）。例如 `10000ms` = 10秒更新一帧。 | `10000` | 否 |
-| `HTTP_PORT` | 容器内部的 HTTP 服务监听端口，用于对外提供 MJPEG 视频流。 | `57333` | 否 |
+| `HTTP_PORT` | 容器内部的 HTTP 服务监听端口，用于对外提供 MJPEG 视频流。        | `57333` | 否 |
