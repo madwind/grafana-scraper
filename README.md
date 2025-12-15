@@ -1,5 +1,3 @@
-好的，我将直接、简洁地解释环境变量，并明确项目的用途和 Docker 仓库位置。
-
 ## 📄 Docker Documentation: `madwind/grafana-scraper`
 
 该项目是一个容器化服务，旨在利用 **Playwright** 自动化登录 Grafana Dashboard，并定期捕获 Dashboard 画面，将其作为 **MJPEG (Motion JPEG)** 视频流通过 HTTP 提供。这使得您可以将 Grafana Cloud 或本地 Grafana 实时画面嵌入到不支持复杂网页的显示器或监控系统中。

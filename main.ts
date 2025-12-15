@@ -66,10 +66,8 @@ if (!dashboardUrl || !mail || !password) {
         `
     });
 
-    console.log('Waiting for page to redirect from login...');
-    await page.waitForFunction(
-        () => !window.location.href.includes('/auth/sign-in')
-    );
+    console.log('Waiting for network idle...');
+    await page.waitForURL(dashboardUrl, {waitUntil: 'networkidle'});
 
     console.log('Starting shared MJPEG server...');
     const clients: http.ServerResponse[] = [];
