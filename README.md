@@ -13,6 +13,7 @@
 | `DASHBOARD_URL` | **目标 Grafana Dashboard 的完整 URL**。          | 无       | 是 |
 | `GRAFANA_MAIL` | Grafana 登录邮箱或用户名。                          | 无       | 是 |
 | `GRAFANA_PASSWORD` | Grafana 登录密码。                              | 无       | 是 |
+| `REFRESH_TOKEN` | 刷新页面Token。 /refresh?token={REFRESH_TOKEN}  | 无       | 否 |
 | `VIEWPORT_WIDTH` | 浏览器视口的宽度（截图宽度）。                            | `2560`  | 否 |
 | `VIEWPORT_HEIGHT` | 浏览器视口的高度（截图高度）。                            | `1305`  | 否 |
 | `QUALITY` | JPG压缩质量。                                   | `30`    | 否 |
