@@ -114,7 +114,7 @@ if (!dashboardUrl || !mail || !password) {
             res.end('Method Not Allowed');
             return;
         }
-        const reqUrl = new URL(req.url);
+        const reqUrl = new URL(req.url, 'http://localhost');
         const pathname = reqUrl.pathname;
         const requestToken = reqUrl.searchParams.get('token');
         if (pathname === '/refresh') {
