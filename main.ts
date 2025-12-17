@@ -1,11 +1,13 @@
 import {firefox} from 'playwright';
 import * as http from 'node:http';
+import * as url from "node:url";
 
 const env = process.env;
 
 const dashboardUrl = env.DASHBOARD_URL;
 const mail = env.GRAFANA_MAIL;
 const password = env.GRAFANA_PASSWORD;
+const refreshToken = env.REFRESH_TOKEN;
 const width = Number(env.VIEWPORT_WIDTH ?? 2560);
 const height = Number(env.VIEWPORT_HEIGHT ?? 1305);
 const quality = Number(env.QUALITY ?? 30);
@@ -72,6 +74,7 @@ if (!dashboardUrl || !mail || !password) {
     console.log('Starting shared MJPEG server...');
     const clients: http.ServerResponse[] = [];
     let latestFrame: Buffer | null = null;
+    let captureAble = true;
 
     async function captureFrame() {
         try {
@@ -80,6 +83,7 @@ if (!dashboardUrl || !mail || !password) {
                 quality,
                 clip: {x: 0, y: 80, width, height}
             });
+
         } catch (e) {
             console.error('Screenshot error:', e);
         }
@@ -88,8 +92,10 @@ if (!dashboardUrl || !mail || !password) {
     await captureFrame();
 
     setInterval(() => {
-        clients.forEach(client => sendFrame(client));
-        captureFrame()
+        if (captureAble) {
+            captureFrame()
+                .then(() => clients.forEach(client => sendFrame(client)))
+        }
     }, interval);
 
     const sendFrame = (res: http.ServerResponse) => {
@@ -108,6 +114,19 @@ if (!dashboardUrl || !mail || !password) {
             res.writeHead(405, {'Content-Type': 'text/plain'});
             res.end('Method Not Allowed');
             return;
+        }
+        const parsedUrl = url.parse(req.url || '', true);
+        if (parsedUrl.pathname === '/refresh') {
+            const requestToken = parsedUrl.query.token;
+            if (requestToken == refreshToken) {
+                console.log('refreshing...');
+                captureAble = false
+                page.reload({waitUntil: 'networkidle'})
+                    .then(() => {
+                        console.log('start capture..');
+                        captureAble = true
+                    })
+            }
         }
 
         res.writeHead(200, {
