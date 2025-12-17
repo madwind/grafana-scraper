@@ -1,6 +1,5 @@
 import {firefox} from 'playwright';
 import * as http from 'node:http';
-import * as url from "node:url";
 
 const env = process.env;
 
@@ -115,9 +114,10 @@ if (!dashboardUrl || !mail || !password) {
             res.end('Method Not Allowed');
             return;
         }
-        const parsedUrl = url.parse(req.url || '', true);
-        if (parsedUrl.pathname === '/refresh') {
-            const requestToken = parsedUrl.query.token;
+        const reqUrl = new URL(req.url);
+        const pathname = reqUrl.pathname;
+        const requestToken = reqUrl.searchParams.get('token');
+        if (pathname === '/refresh') {
             if (requestToken == refreshToken) {
                 console.log('refreshing...');
                 captureAble = false
