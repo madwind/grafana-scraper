@@ -6,7 +6,7 @@ const env = process.env;
 const dashboardUrl = env.DASHBOARD_URL;
 const mail = env.GRAFANA_MAIL;
 const password = env.GRAFANA_PASSWORD;
-const refreshToken = env.REFRESH_TOKEN;
+const token = env.TOKEN;
 const width = Number(env.VIEWPORT_WIDTH ?? 2560);
 const height = Number(env.VIEWPORT_HEIGHT ?? 1305);
 const quality = Number(env.QUALITY ?? 30);
@@ -117,16 +117,18 @@ if (!dashboardUrl || !mail || !password) {
         const reqUrl = new URL(req.url, 'http://localhost');
         const pathname = reqUrl.pathname;
         const requestToken = reqUrl.searchParams.get('token');
+        if (requestToken !== token) {
+            req.socket.destroy();
+            return;
+        }
         if (pathname === '/refresh') {
-            if (requestToken == refreshToken) {
-                console.log('refreshing...');
-                captureAble = false
-                page.reload({waitUntil: 'networkidle'})
-                    .then(() => {
-                        console.log('start capture..');
-                        captureAble = true
-                    })
-            }
+            console.log('refreshing...');
+            captureAble = false
+            page.reload({waitUntil: 'networkidle'})
+                .then(() => {
+                    console.log('start capture..');
+                    captureAble = true
+                })
         }
 
         res.writeHead(200, {
