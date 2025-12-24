@@ -1,5 +1,6 @@
 import {firefox} from 'playwright';
 import * as http from 'node:http';
+import {VERSION} from "./version";
 
 const env = process.env;
 
@@ -19,6 +20,7 @@ if (!dashboardUrl || !mail || !password) {
 }
 
 (async () => {
+    console.log(`grafana-scraper starting (version=${VERSION})`);
     console.log('Launching browser...');
     const browser = await firefox.launch();
 
@@ -116,10 +118,12 @@ if (!dashboardUrl || !mail || !password) {
         }
         const reqUrl = new URL(req.url, 'http://localhost');
         const pathname = reqUrl.pathname;
-        const requestToken = reqUrl.searchParams.get('token');
-        if (requestToken !== token) {
-            req.socket.destroy();
-            return;
+        if (token !== undefined) {
+            const requestToken = reqUrl.searchParams.get('token');
+            if (requestToken !== token) {
+                req.socket.destroy();
+                return;
+            }
         }
         if (pathname === '/refresh') {
             console.log('refreshing...');
