@@ -28,7 +28,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Extract app version from version.js
+      - name: Extract app version from version.ts
         id: extract_version
         run: |
           APP_VERSION=$(grep -E 'VERSION =' version.ts | sed -E 's/.*"(.+)".*/\1/')
