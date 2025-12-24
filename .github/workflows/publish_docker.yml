@@ -5,7 +5,7 @@ on:
   push:
     branches: [ "master" ]
     paths:
-      - 'version.ts'
+      - '../../version.js'
 
 concurrency:
   group: docker-build
@@ -28,10 +28,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Extract app version from version.ts
+      - name: Extract app version from version.js
         id: extract_version
         run: |
-          APP_VERSION=$(grep -E 'VERSION =' version.ts | sed -E 's/.*"(.+)".*/\1/')
+          APP_VERSION=$(grep -E 'VERSION =' version.js | sed -E 's/.*"(.+)".*/\1/')
           echo "app_version=$APP_VERSION" >> $GITHUB_OUTPUT
 
       - name: Prepare
