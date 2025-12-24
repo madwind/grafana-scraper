@@ -4,8 +4,12 @@ on:
   workflow_dispatch:
   push:
     branches: [ "master" ]
-    paths-ignore:
-      - '**/*.md'
+    paths:
+      - 'version.ts'
+
+concurrency:
+  group: docker-build
+  cancel-in-progress: true
 
 env:
   REGISTRY_IMAGE: madwind/grafana-scraper
@@ -14,7 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      app_version: ${{ steps.app_version.outputs.app_version }}
+      app_version: ${{ steps.extract_version.outputs.app_version }}
     strategy:
       matrix:
         platform:
@@ -24,15 +28,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Get version
-        id: app_version
+      - name: Extract app version from version.ts
+        id: extract_version
         run: |
-          VERSION=$(jq -r '.version' package.json)
-          echo "app_version=$VERSION" >> $GITHUB_OUTPUT
+          APP_VERSION=$(grep -E 'VERSION =' version.ts | sed -E 's/.*"(.+)".*/\1/')
+          echo "app_version=$APP_VERSION" >> $GITHUB_OUTPUT
 
       - name: Prepare
         run: |
-          echo ${{ steps.app_version.outputs.app_version }}
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
 
@@ -61,8 +64,6 @@ jobs:
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           tags: ${{ env.REGISTRY_IMAGE }}
-          build-args: |
-            PLAYWRIGHT_VERSION=${{ steps.app_version.outputs.app_version }}
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
         env:
           BUILDKIT_PROGRESS: plain
