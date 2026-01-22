@@ -8,10 +8,19 @@ const dashboardUrl = env.DASHBOARD_URL;
 const mail = env.GRAFANA_MAIL;
 const password = env.GRAFANA_PASSWORD;
 const token = env.TOKEN;
-const width = Number(env.VIEWPORT_WIDTH ?? 2560);
-const height = Number(env.VIEWPORT_HEIGHT ?? 1305);
-const clip_left = Number(env.CLIP_LEFT ?? 0);
-const clip_top = Number(env.CLIP_TOP ?? 140);
+const viewportWidth = Number(env.VIEWPORT_WIDTH ?? 2560);
+
+const clipLeft = Number(env.CLIP_LEFT ?? 0);
+const clipTop = Number(env.CLIP_TOP ?? 140);
+const clipWidth = Number(env.CLIP_WIDTH ?? viewportWidth);
+const clipHeight = Number(env.CLIP_HEIGHT ?? 1305);
+
+const VIEWPORT_BUFFER = 200;
+
+const viewportHeight = Number(
+    env.VIEWPORT_HEIGHT ??
+    (clipTop + clipHeight + VIEWPORT_BUFFER)
+);
 const quality = Number(env.QUALITY ?? 30);
 const interval = Number(env.CAPTURE_INTERVAL ?? 10000);
 const port = Number(env.HTTP_PORT ?? 57333);
@@ -28,7 +37,7 @@ if (!dashboardUrl || !mail || !password) {
 
     console.log('Creating browser context...');
     const context = await browser.newContext({
-        viewport: {width, height}
+        viewport: {width: viewportWidth, height: viewportHeight}
     });
 
     const page = await context.newPage();
@@ -84,7 +93,7 @@ if (!dashboardUrl || !mail || !password) {
             latestFrame = await page.screenshot({
                 type: 'jpeg',
                 quality,
-                clip: {x: clip_left, y: clip_top, width, height}
+                clip: {x: clipLeft, y: clipTop, width: clipWidth, height: clipHeight}
             });
 
         } catch (e) {
