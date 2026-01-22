@@ -11,9 +11,9 @@ const token = env.TOKEN;
 const viewportWidth = Number(env.VIEWPORT_WIDTH ?? 2560);
 
 const clipLeft = Number(env.CLIP_LEFT ?? 0);
-const clipTop = Number(env.CLIP_TOP ?? 140);
+const clipTop = Number(env.CLIP_TOP ?? 130);
 const clipWidth = Number(env.CLIP_WIDTH ?? viewportWidth);
-const clipHeight = Number(env.CLIP_HEIGHT ?? 1305);
+const clipHeight = Number(env.CLIP_HEIGHT ?? 1175);
 
 const VIEWPORT_BUFFER = 200;
 
