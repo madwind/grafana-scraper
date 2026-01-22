@@ -10,6 +10,8 @@ const password = env.GRAFANA_PASSWORD;
 const token = env.TOKEN;
 const width = Number(env.VIEWPORT_WIDTH ?? 2560);
 const height = Number(env.VIEWPORT_HEIGHT ?? 1305);
+const clip_x = Number(env.CLIP_X ?? 0);
+const clip_y = Number(env.CLIP_Y ?? 140);
 const quality = Number(env.QUALITY ?? 30);
 const interval = Number(env.CAPTURE_INTERVAL ?? 10000);
 const port = Number(env.HTTP_PORT ?? 57333);
@@ -82,7 +84,7 @@ if (!dashboardUrl || !mail || !password) {
             latestFrame = await page.screenshot({
                 type: 'jpeg',
                 quality,
-                clip: {x: 0, y: 80, width, height}
+                clip: {x: clip_x, y: clip_y, width, height}
             });
 
         } catch (e) {
