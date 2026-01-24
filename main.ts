@@ -1,8 +1,14 @@
-import {firefox} from 'playwright';
+import {chromium} from 'playwright';
 import * as http from 'node:http';
 import {VERSION} from "./version";
 
 const env = process.env;
+
+const proxyServer = env.PROXY_SERVER
+const headless = env.HEADLESS
+
+const locale = env.BROWSER_LOCALE ?? 'en-US'
+const timezoneId = env.TIMEZONE_ID ?? 'UTC';
 
 const dashboardUrl = env.DASHBOARD_URL;
 const mail = env.GRAFANA_MAIL;
@@ -33,11 +39,15 @@ if (!dashboardUrl || !mail || !password) {
 (async () => {
     console.log(`grafana-scraper starting (version=${VERSION})`);
     console.log('Launching browser...');
-    const browser = await firefox.launch();
+
+    const browser = await chromium.launch({headless: headless.toLowerCase() !== "false"});
 
     console.log('Creating browser context...');
     const context = await browser.newContext({
-        viewport: {width: viewportWidth, height: viewportHeight}
+        proxy: {server: proxyServer},
+        viewport: {width: viewportWidth, height: viewportHeight},
+        locale,
+        timezoneId
     });
 
     const page = await context.newPage();
