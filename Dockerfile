@@ -5,6 +5,6 @@ WORKDIR /app
 COPY package.json main.ts version.ts ./
 
 RUN npm install && \
-    npx playwright install --with-deps firefox
+    npx playwright install --with-deps --no-shell chromium
 
 CMD ["npm", "start"]
