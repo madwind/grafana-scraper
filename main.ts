@@ -5,7 +5,7 @@ import {VERSION} from "./version";
 const env = process.env;
 
 const proxyServer = env.PROXY_SERVER
-const headless = env.HEADLESS
+const headless = env.HEADLESS ?? 'true'
 
 const locale = env.BROWSER_LOCALE ?? 'en-US'
 const timezoneId = env.TZ;
