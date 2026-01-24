@@ -8,7 +8,7 @@ const proxyServer = env.PROXY_SERVER
 const headless = env.HEADLESS
 
 const locale = env.BROWSER_LOCALE ?? 'en-US'
-const timezoneId = env.TIMEZONE_ID ?? 'UTC';
+const timezoneId = env.TZ;
 
 const dashboardUrl = env.DASHBOARD_URL;
 const mail = env.GRAFANA_MAIL;
@@ -90,8 +90,8 @@ if (!dashboardUrl || !mail || !password) {
         `
     });
 
-    console.log('Waiting for network idle...');
-    await page.waitForURL(dashboardUrl, {waitUntil: 'networkidle'});
+    console.log('Waiting for dom content loaded...');
+    await page.waitForURL(dashboardUrl, {waitUntil: 'domcontentloaded'});
 
     console.log('Starting shared MJPEG server...');
     const clients: http.ServerResponse[] = [];
