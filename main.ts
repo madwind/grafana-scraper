@@ -44,7 +44,7 @@ if (!dashboardUrl || !mail || !password) {
 
     console.log('Creating browser context...');
     const context = await browser.newContext({
-        proxy: {server: proxyServer},
+        proxy: proxyServer ? {server: proxyServer} : undefined,
         viewport: {width: viewportWidth, height: viewportHeight},
         locale,
         timezoneId
