@@ -73,14 +73,6 @@ if (!dashboardUrl || !mail || !password) {
     await page.locator('input[name="password"]').fill(password);
     await page.locator('button[type="submit"]').click();
 
-    console.log('Resetting localStorage after login...');
-    await page.evaluate(() => {
-        localStorage.setItem('grafana.grafana-setupguide-app.banners.adaptive_metrics_recommendations', 'false');
-        localStorage.setItem('grafana.grafana-setupguide-app.banners.free', 'false');
-        localStorage.setItem('grafana.navigation.docked', 'false');
-        localStorage.setItem('grafana.grafana-setupguide-app.modals.plan-picker', 'false');
-    });
-
     console.log('Disabling animations...');
     await page.addStyleTag({
         content: `
@@ -92,7 +84,15 @@ if (!dashboardUrl || !mail || !password) {
     });
 
     console.log('Waiting for dom content loaded...');
+
+    console.log('Resetting localStorage after login...');
     await page.waitForURL(dashboardUrl, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => {
+        localStorage.setItem('grafana.grafana-setupguide-app.banners.adaptive_metrics_recommendations', 'false');
+        localStorage.setItem('grafana.grafana-setupguide-app.banners.free', 'false');
+        localStorage.setItem('grafana.navigation.docked', 'false');
+        localStorage.setItem('grafana.grafana-setupguide-app.modals.plan-picker', 'false');
+    });
 
     console.log('Starting shared MJPEG server...');
     const clients: http.ServerResponse[] = [];
