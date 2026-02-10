@@ -75,6 +75,7 @@ if (!dashboardUrl || !mail || !password) {
 
     console.log('Resetting localStorage after login...');
     await page.evaluate(() => {
+        localStorage.setItem('grafana.grafana-setupguide-app.banners.adaptive_metrics_recommendations', 'false');
         localStorage.setItem('grafana.grafana-setupguide-app.banners.free', 'false');
         localStorage.setItem('grafana.navigation.docked', 'false');
         localStorage.setItem('grafana.grafana-setupguide-app.modals.plan-picker', 'false');
