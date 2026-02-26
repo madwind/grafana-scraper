@@ -4,34 +4,33 @@ import {VERSION} from "./version";
 
 const env = process.env;
 
-const proxyServer = env.PROXY_SERVER
-const headless = env.HEADLESS ?? 'true'
+const PROXY_SERVER = env.PROXY_SERVER
+const HEADLESS = env.HEADLESS ?? 'true'
 
-const locale = env.BROWSER_LOCALE ?? 'en-US'
-const timezoneId = env.TZ;
+const BROWSER_LOCALE = env.BROWSER_LOCALE ?? 'en-US'
+const TIMEZONE_ID = env.TZ;
 
-const dashboardUrl = env.DASHBOARD_URL;
-const mail = env.GRAFANA_MAIL;
-const password = env.GRAFANA_PASSWORD;
-const token = env.TOKEN;
-const viewportWidth = Number(env.VIEWPORT_WIDTH ?? 2560);
+const DASHBOARD_URL = env.DASHBOARD_URL;
+const GRAFANA_MAIL = env.GRAFANA_MAIL;
+const GRAFANA_PASSWORD = env.GRAFANA_PASSWORD;
+const TOKEN = env.TOKEN;
+const VIEWPORT_WIDTH = Number(env.VIEWPORT_WIDTH ?? 2560);
 
-const clipLeft = Number(env.CLIP_LEFT ?? 0);
-const clipTop = Number(env.CLIP_TOP ?? 130);
-const clipWidth = Number(env.CLIP_WIDTH ?? viewportWidth);
-const clipHeight = Number(env.CLIP_HEIGHT ?? 1175);
+const CSS_SELECTOR = env.CSS_SELECTOR ?? 'body'
 
-const VIEWPORT_BUFFER = 200;
+// const clipLeft = Number(env.CLIP_LEFT ?? 0);
+// const clipTop = Number(env.CLIP_TOP ?? 0);
+// const clipWidth = Number(env.CLIP_WIDTH ?? viewportWidth);
+// const clipHeight = Number(env.CLIP_HEIGHT ?? 1175);
 
-const viewportHeight = Number(
-    env.VIEWPORT_HEIGHT ??
-    (clipTop + clipHeight + VIEWPORT_BUFFER)
-);
+// const VIEWPORT_BUFFER = 200;
+
+const viewportHeight = Number(env.VIEWPORT_HEIGHT ?? 2560);
 const quality = Number(env.QUALITY ?? 30);
 const interval = Number(env.CAPTURE_INTERVAL ?? 10000);
 const port = Number(env.HTTP_PORT ?? 57333);
 
-if (!dashboardUrl || !mail || !password) {
+if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
     console.error('Error: DASHBOARD_URL, GRAFANA_MAIL, and GRAFANA_PASSWORD must be set.');
     process.exit(1);
 }
@@ -40,20 +39,20 @@ if (!dashboardUrl || !mail || !password) {
     console.log(`grafana-scraper starting (version=${VERSION})`);
     console.log('Launching browser...');
 
-    const browser = await chromium.launch({headless: headless.toLowerCase() !== "false"});
+    const browser = await chromium.launch({headless: HEADLESS.toLowerCase() !== "false"});
 
     console.log('Creating browser context...');
     const context = await browser.newContext({
-        proxy: proxyServer ? {server: proxyServer} : undefined,
-        viewport: {width: viewportWidth, height: viewportHeight},
-        locale,
-        timezoneId
+        proxy: PROXY_SERVER ? {server: PROXY_SERVER} : undefined,
+        viewport: {width: VIEWPORT_WIDTH, height: viewportHeight},
+        locale: BROWSER_LOCALE,
+        timezoneId: TIMEZONE_ID
     });
 
     const page = await context.newPage();
 
-    console.log(`Navigating to dashboard: ${dashboardUrl}`);
-    await page.goto(dashboardUrl, {waitUntil: 'domcontentloaded', timeout: 60000});
+    console.log(`Navigating to dashboard: ${DASHBOARD_URL}`);
+    await page.goto(DASHBOARD_URL, {waitUntil: 'domcontentloaded', timeout: 60000});
 
     console.log('Setting localStorage...');
     await page.evaluate(() => {
@@ -66,11 +65,11 @@ if (!dashboardUrl || !mail || !password) {
     await page.locator('a[href="login/grafana_com"]').click();
 
     console.log('Filling login email...');
-    await page.locator('input[name="login"]').fill(mail);
+    await page.locator('input[name="login"]').fill(GRAFANA_MAIL);
     await page.locator('button[type="submit"]').click();
 
     console.log('Filling password...');
-    await page.locator('input[name="password"]').fill(password);
+    await page.locator('input[name="password"]').fill(GRAFANA_PASSWORD);
     await page.locator('button[type="submit"]').click();
 
     console.log('Disabling animations...');
@@ -86,7 +85,7 @@ if (!dashboardUrl || !mail || !password) {
     console.log('Waiting for dom content loaded...');
 
     console.log('Resetting localStorage after login...');
-    await page.waitForURL(dashboardUrl, {waitUntil: 'domcontentloaded'});
+    await page.waitForURL(DASHBOARD_URL, {waitUntil: 'domcontentloaded'});
     await page.evaluate(() => {
         localStorage.setItem('grafana.grafana-setupguide-app.banners.adaptive_metrics_recommendations', 'false');
         localStorage.setItem('grafana.grafana-setupguide-app.banners.free', 'false');
@@ -101,10 +100,11 @@ if (!dashboardUrl || !mail || !password) {
 
     async function captureFrame() {
         try {
-            latestFrame = await page.screenshot({
+            const targetElement = page.locator(CSS_SELECTOR)
+            latestFrame = await targetElement.screenshot({
                 type: 'jpeg',
                 quality,
-                clip: {x: clipLeft, y: clipTop, width: clipWidth, height: clipHeight}
+                // clip: {x: clipLeft, y: clipTop, width: clipWidth, height: clipHeight}
             });
 
         } catch (e) {
@@ -140,9 +140,9 @@ if (!dashboardUrl || !mail || !password) {
         }
         const reqUrl = new URL(req.url, 'http://localhost');
         const pathname = reqUrl.pathname;
-        if (token !== undefined) {
+        if (TOKEN !== undefined) {
             const requestToken = reqUrl.searchParams.get('token');
-            if (requestToken !== token) {
+            if (requestToken !== TOKEN) {
                 req.socket.destroy();
                 return;
             }
