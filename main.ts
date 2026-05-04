@@ -18,13 +18,6 @@ const VIEWPORT_WIDTH = Number(env.VIEWPORT_WIDTH ?? 2560);
 
 const CSS_SELECTOR = env.CSS_SELECTOR ?? 'body'
 
-// const clipLeft = Number(env.CLIP_LEFT ?? 0);
-// const clipTop = Number(env.CLIP_TOP ?? 0);
-// const clipWidth = Number(env.CLIP_WIDTH ?? viewportWidth);
-// const clipHeight = Number(env.CLIP_HEIGHT ?? 1175);
-
-// const VIEWPORT_BUFFER = 200;
-
 const viewportHeight = Number(env.VIEWPORT_HEIGHT ?? 2560);
 const quality = Number(env.QUALITY ?? 30);
 const interval = Number(env.CAPTURE_INTERVAL ?? 10000);
@@ -59,6 +52,7 @@ if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
         localStorage.setItem('grafana.grafana-setupguide-app.banners.free', 'false');
         localStorage.setItem('grafana.navigation.docked', 'false');
         localStorage.setItem('grafana.grafana-setupguide-app.modals.plan-picker', 'false');
+        localStorage.setItem('grafana.grafana-setupguide-app.modals.g13-tour', 'true');
     });
 
     console.log('Clicking Grafana login link...');
