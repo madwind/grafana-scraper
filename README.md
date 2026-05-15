@@ -14,7 +14,7 @@ Motion JPEG)** 视频流通过 HTTP 提供。这使得您可以将 Grafana Cloud
 | `DASHBOARD_URL`    | **目标 Grafana Dashboard 的完整 URL**                            | 无       | 是  |
 | `GRAFANA_MAIL`     | Grafana 登录邮箱或用户名                                            | 无       | 是  |
 | `GRAFANA_PASSWORD` | Grafana 登录密码                                                | 无       | 是  |
-| `REFRESH_TOKEN`    | 刷新页面 Token，通过 `/refresh?token={REFRESH_TOKEN}` 触发           | 无       | 否  |
+| `TOKENS`           | 访问 Token，支持单个或多个；多个值可用逗号、分号、空格或换行分隔                   | 无       | 否  |
 | `CSS_SELECTOR`     | 截图元素CSS选择器                                                  | 'body'  | 是  |
 | `VIEWPORT_WIDTH`   | 浏览器视口宽度（用于完整渲染 Dashboard）                                   | `2560`  | 否  |
 | `VIEWPORT_HEIGHT`  | 浏览器视口高度（需 ≥ `CLIP_TOP + CLIP_HEIGHT`，未设置时自动计算）              | 自动计算    | 否  |
@@ -24,3 +24,24 @@ Motion JPEG)** 视频流通过 HTTP 提供。这使得您可以将 Grafana Cloud
 | `BROWSER_LOCALE`   | 浏览器语言环境（修复 Grafana 图表崩溃问题），影响 `navigator.language`、Intl 格式化 | `en-US` | 否  |
 | `PROXY_SERVER`     | 浏览器使用的代理服务器（如 `http://host:port`）                           | 无       | 否  |
 | `HEADLESS`         | 是否启用无头模式（`true` / `false`）                                  | `true`  | 否  |
+
+### 多 Token 示例
+
+如果有 7 个用户，可以给每个用户分配一个 Token：
+
+```bash
+TOKENS=user1-token,user2-token,user3-token,user4-token,user5-token,user6-token,user7-token
+```
+
+如果只有 1 个用户，也使用同一个变量：
+
+```bash
+TOKENS=user1-token
+```
+
+访问时使用各自的 Token：
+
+```text
+http://localhost:57333/?token=user1-token
+http://localhost:57333/refresh?token=user1-token
+```

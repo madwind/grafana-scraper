@@ -13,7 +13,6 @@ const TIMEZONE_ID = env.TZ;
 const DASHBOARD_URL = env.DASHBOARD_URL;
 const GRAFANA_MAIL = env.GRAFANA_MAIL;
 const GRAFANA_PASSWORD = env.GRAFANA_PASSWORD;
-const TOKEN = env.TOKEN;
 const VIEWPORT_WIDTH = Number(env.VIEWPORT_WIDTH ?? 2560);
 
 const CSS_SELECTOR = env.CSS_SELECTOR ?? 'body'
@@ -23,6 +22,17 @@ const quality = Number(env.QUALITY ?? 30);
 const interval = Number(env.CAPTURE_INTERVAL ?? 10000);
 const port = Number(env.HTTP_PORT ?? 57333);
 
+function parseTokens(...values: Array<string | undefined>): Set<string> {
+    return new Set(
+        values
+            .flatMap(value => value?.split(/[\s,;]+/) ?? [])
+            .map(token => token.trim())
+            .filter(token => token.length > 0)
+    );
+}
+
+const TOKENS = parseTokens(env.TOKENS);
+
 if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
     console.error('Error: DASHBOARD_URL, GRAFANA_MAIL, and GRAFANA_PASSWORD must be set.');
     process.exit(1);
@@ -30,6 +40,7 @@ if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
 
 (async () => {
     console.log(`grafana-scraper starting (version=${VERSION})`);
+    console.log(TOKENS.size > 0 ? `HTTP token auth enabled (${TOKENS.size} token(s))` : 'HTTP token auth disabled');
     console.log('Launching browser...');
 
     const browser = await chromium.launch({headless: HEADLESS.toLowerCase() !== "false"});
@@ -134,9 +145,9 @@ if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
         }
         const reqUrl = new URL(req.url, 'http://localhost');
         const pathname = reqUrl.pathname;
-        if (TOKEN !== undefined) {
+        if (TOKENS.size > 0) {
             const requestToken = reqUrl.searchParams.get('token');
-            if (requestToken !== TOKEN) {
+            if (requestToken === null || !TOKENS.has(requestToken)) {
                 req.socket.destroy();
                 return;
             }
