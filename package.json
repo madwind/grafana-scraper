@@ -10,7 +10,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "playwright": "^1.61.1",
+    "playwright": "^1.62.0",
     "tsx": "^4.22.4"
   },
   "devDependencies": {
