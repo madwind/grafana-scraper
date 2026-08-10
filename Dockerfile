@@ -1,4 +1,4 @@
-FROM node:26.5.1-trixie-slim
+FROM node:26.7.0-trixie-slim
 
 WORKDIR /app
 
