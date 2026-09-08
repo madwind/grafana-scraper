@@ -101,30 +101,29 @@ if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
     console.log('Starting shared MJPEG server...');
     const clients: http.ServerResponse[] = [];
     let latestFrame: Buffer | null = null;
-    let captureAble = true;
+    let captureEnabled = true;
+    let capturePromise: Promise<void> | null = null;
 
-    async function captureFrame() {
-        try {
+    async function captureFrame(): Promise<void> {
+        if (capturePromise) {
+            return capturePromise;
+        }
+
+        capturePromise = (async () => {
             const targetElement = page.locator(CSS_SELECTOR)
             latestFrame = await targetElement.screenshot({
                 type: 'jpeg',
                 quality,
                 // clip: {x: clipLeft, y: clipTop, width: clipWidth, height: clipHeight}
             });
+        })();
 
-        } catch (e) {
-            console.error('Screenshot error:', e);
+        try {
+            await capturePromise;
+        } finally {
+            capturePromise = null;
         }
     }
-
-    await captureFrame();
-
-    setInterval(() => {
-        if (captureAble) {
-            captureFrame()
-                .then(() => clients.forEach(client => sendFrame(client)))
-        }
-    }, interval);
 
     const sendFrame = (res: http.ServerResponse) => {
         if (!latestFrame) return;
@@ -137,7 +136,27 @@ if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
         }
     };
 
-    const server = http.createServer((req, res) => {
+    try {
+        await captureFrame();
+    } catch (e) {
+        console.error('Screenshot error:', e);
+    }
+
+    const scheduleCapture = async () => {
+        if (captureEnabled) {
+            try {
+                await captureFrame();
+                clients.forEach(client => sendFrame(client));
+            } catch (e) {
+                console.error('Screenshot error:', e);
+            }
+        }
+        setTimeout(scheduleCapture, interval);
+    };
+
+    setTimeout(scheduleCapture, interval);
+
+    const server = http.createServer(async (req, res) => {
         if (req.method !== 'GET') {
             res.writeHead(405, {'Content-Type': 'text/plain'});
             res.end('Method Not Allowed');
@@ -153,13 +172,25 @@ if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
             }
         }
         if (pathname === '/refresh') {
-            console.log('refreshing...');
-            captureAble = false
-            page.reload({waitUntil: 'networkidle'})
-                .then(() => {
-                    console.log('start capture..');
-                    captureAble = true
-                })
+            console.log('Refreshing...');
+            captureEnabled = false;
+            try {
+                if (capturePromise) {
+                    await capturePromise;
+                }
+                await page.reload({waitUntil: 'networkidle'});
+                await captureFrame();
+                clients.forEach(client => sendFrame(client));
+                res.writeHead(200, {'Content-Type': 'text/plain'});
+                res.end('Refreshed');
+            } catch (e) {
+                console.error('Refresh error:', e);
+                res.writeHead(500, {'Content-Type': 'text/plain'});
+                res.end('Refresh failed');
+            } finally {
+                captureEnabled = true;
+            }
+            return;
         }
 
         res.writeHead(200, {
