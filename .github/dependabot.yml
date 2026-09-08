@@ -4,6 +4,10 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      docker-dependencies:
+        patterns:
+          - "*"
     commit-message:
       prefix: "deps(docker)"
 
@@ -11,6 +15,10 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
     commit-message:
       prefix: "deps(actions)"
 
@@ -18,5 +26,9 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      npm-dependencies:
+        patterns:
+          - "*"
     commit-message:
       prefix: "deps(npm)"
