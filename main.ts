@@ -1,6 +1,7 @@
 import {chromium} from 'playwright';
 import * as http from 'node:http';
 import {VERSION} from "./version";
+import {listenHttpServer} from './http-listener';
 
 const env = process.env;
 
@@ -20,7 +21,7 @@ const CSS_SELECTOR = env.CSS_SELECTOR ?? 'body'
 const viewportHeight = Number(env.VIEWPORT_HEIGHT ?? 2560);
 const quality = Number(env.QUALITY ?? 30);
 const interval = Number(env.CAPTURE_INTERVAL ?? 10000);
-const port = Number(env.HTTP_PORT ?? 57333);
+const socketPath = env.HTTP_SOCKET ?? '/run/grafana-scraper/grafana-scraper.sock';
 
 function parseTokens(...values: Array<string | undefined>): Set<string> {
     return new Set(
@@ -103,6 +104,8 @@ if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
     let latestFrame: Buffer | null = null;
     let captureEnabled = true;
     let capturePromise: Promise<void> | null = null;
+    let shuttingDown = false;
+    let captureTimer: NodeJS.Timeout;
 
     async function captureFrame(): Promise<void> {
         if (capturePromise) {
@@ -151,10 +154,10 @@ if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
                 console.error('Screenshot error:', e);
             }
         }
-        setTimeout(scheduleCapture, interval);
+        if (!shuttingDown) captureTimer = setTimeout(scheduleCapture, interval);
     };
 
-    setTimeout(scheduleCapture, interval);
+    captureTimer = setTimeout(scheduleCapture, interval);
 
     const server = http.createServer(async (req, res) => {
         if (req.method !== 'GET') {
@@ -209,5 +212,28 @@ if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
         });
     });
 
-    server.listen(port, () => console.log(`MJPEG server started on port ${port}`));
-})();
+    await listenHttpServer(server, socketPath);
+    console.log(`MJPEG server started on Unix socket ${socketPath}`);
+
+    const shutdown = async () => {
+        if (shuttingDown) return;
+        shuttingDown = true;
+        captureEnabled = false;
+        clearTimeout(captureTimer);
+        const closed = new Promise<void>(resolve => server.close(() => resolve()));
+        server.closeAllConnections();
+        await Promise.all([closed, browser.close()]);
+        process.exit(0);
+    };
+    process.once('SIGTERM', () => shutdown().catch(error => {
+        console.error('Shutdown failed:', error);
+        process.exit(1);
+    }));
+    process.once('SIGINT', () => shutdown().catch(error => {
+        console.error('Shutdown failed:', error);
+        process.exit(1);
+    }));
+})().catch(error => {
+    console.error('Startup failed:', error);
+    process.exit(1);
+});
