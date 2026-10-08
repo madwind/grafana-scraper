@@ -7,6 +7,17 @@ Motion JPEG)** 视频流通过 HTTP 提供。这使得您可以将 Grafana Cloud
 
 **`madwind/grafana-scraper`**
 
+### 本地运行
+
+需要 Node.js 22.18.0 或更高版本，直接使用 Node 原生 TypeScript 支持，无需 `tsx` 或编译步骤。
+
+```bash
+npm ci
+npx playwright install --with-deps --only-shell chromium
+# 设置下方必填环境变量，并准备好 Unix socket 所在目录后启动
+npm start
+```
+
 ### 📋 环境变量说明
 
 | 变量名                | 描述（用途）                                                      | 默认值     | 必填 |

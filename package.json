@@ -3,15 +3,17 @@
   "description": "",
   "main": "main.ts",
   "scripts": {
-    "start": "tsx main.ts"
+    "start": "node main.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "dependencies": {
-    "playwright": "^1.63.0",
-    "tsx": "^4.23.13"
+    "playwright": "^1.63.0"
   },
   "devDependencies": {
     "@types/node": "^26.4.1"
