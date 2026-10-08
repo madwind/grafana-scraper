@@ -1,0 +1,27 @@
+name: Docker smoke test
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['26.8', '26.9']
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build test image
+        env:
+          NODE_VERSION: ${{ matrix.node }}
+        run: |
+          sed "1cFROM node:${NODE_VERSION}-trixie-slim" Dockerfile > /tmp/Dockerfile.smoke
+          docker build -f /tmp/Dockerfile.smoke -t grafana-scraper:smoke .
+      - name: Verify native TypeScript and Unix socket as Node user
+        run: |
+          docker run --rm --init --user 1000:1000 --ipc=host \
+            -v "$PWD/tests:/tests:ro" grafana-scraper:smoke node /tests/smoke.mjs

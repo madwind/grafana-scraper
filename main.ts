@@ -1,7 +1,7 @@
 import {chromium} from 'playwright';
 import * as http from 'node:http';
-import {VERSION} from "./version";
-import {listenHttpServer} from './http-listener';
+import {VERSION} from "./version.ts";
+import {listenHttpServer} from './http-listener.ts';
 
 const env = process.env;
 

@@ -71,3 +71,9 @@ location / {
 ```bash
 curl --unix-socket /run/grafana-scraper/grafana-scraper.sock 'http://localhost/refresh?token=user1-token'
 ```
+
+### Node 原生 TypeScript
+
+项目使用 ESM 与 Node 内置 type stripping，直接运行 `npm start`（`node main.ts`），无需 `tsx`。Docker 使用 Node 26；K3s 覆盖启动命令时也使用 `exec node main.ts`。相对 import 必须包含 `.ts` 扩展名，类型 import 使用 `import type`；避免 enum、运行时 namespace 和构造器参数属性等需要转换的语法。
+
+Docker smoke test 使用本地登录页面和真实 Chromium，验证 Node 26.8/26.9 的原生 TS 启动、Unix socket、MJPEG、Token、刷新和正常退出。已安装依赖与 Playwright 浏览器时，可运行 `node tests/smoke.mjs`。
