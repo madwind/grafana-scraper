@@ -18,6 +18,8 @@ npx playwright install --with-deps --only-shell chromium
 npm start
 ```
 
+使用 `npm run typecheck` 检查类型，不生成 JavaScript 文件。IDEA 的 TypeScript 设置中选择项目的 `node_modules/typescript`；项目根目录的 `tsconfig.json` 已配置 Node 类型和原生 `.ts` 导入支持。
+
 ### 📋 环境变量说明
 
 | 变量名                | 描述（用途）                                                      | 默认值     | 必填 |

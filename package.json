@@ -3,7 +3,8 @@
   "description": "",
   "main": "main.ts",
   "scripts": {
-    "start": "node main.ts"
+    "start": "node main.ts",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +17,7 @@
     "playwright": "^1.63.0"
   },
   "devDependencies": {
-    "@types/node": "^26.4.1"
+    "@types/node": "^26.4.1",
+    "typescript": "^6.0.3"
   }
 }

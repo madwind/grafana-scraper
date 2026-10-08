@@ -165,7 +165,7 @@ if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
             res.end('Method Not Allowed');
             return;
         }
-        const reqUrl = new URL(req.url, 'http://localhost');
+        const reqUrl = new URL(req.url ?? '/', 'http://localhost');
         const pathname = reqUrl.pathname;
         if (TOKENS.size > 0) {
             const requestToken = reqUrl.searchParams.get('token');
