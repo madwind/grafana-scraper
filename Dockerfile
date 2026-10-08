@@ -11,4 +11,6 @@ RUN npm ci && \
 
 COPY main.ts http-listener.ts version.ts ./
 
+USER node
+
 CMD ["npm", "start"]

@@ -45,7 +45,7 @@ export async function listenHttpServer(server: Server, socketPath: string): Prom
     await new Promise<void>((resolve, reject) => {
         const onError = (error: Error) => reject(error);
         server.once('error', onError);
-        server.listen(socketPath, () => {
+        server.listen({path: socketPath, readableAll: true, writableAll: true}, () => {
             server.off('error', onError);
             resolve();
         });
