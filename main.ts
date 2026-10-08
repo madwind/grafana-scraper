@@ -59,14 +59,6 @@ if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
     console.log(`Navigating to dashboard: ${DASHBOARD_URL}`);
     await page.goto(DASHBOARD_URL, {waitUntil: 'domcontentloaded', timeout: 60000});
 
-    console.log('Setting localStorage...');
-    await page.evaluate(() => {
-        localStorage.setItem('grafana.grafana-setupguide-app.banners.free', 'false');
-        localStorage.setItem('grafana.navigation.docked', 'false');
-        localStorage.setItem('grafana.grafana-setupguide-app.modals.plan-picker', 'false');
-        localStorage.setItem('grafana.grafana-setupguide-app.modals.g13-tour', 'true');
-    });
-
     console.log('Clicking Grafana login link...');
     await page.locator('a[href="login/grafana_com"]').click();
 
@@ -88,16 +80,8 @@ if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
         `
     });
 
-    console.log('Waiting for dom content loaded...');
-
-    console.log('Resetting localStorage after login...');
+    console.log('Waiting for dashboard to load...');
     await page.waitForURL(DASHBOARD_URL, {waitUntil: 'domcontentloaded'});
-    await page.evaluate(() => {
-        localStorage.setItem('grafana.grafana-setupguide-app.banners.adaptive_metrics_recommendations', 'false');
-        localStorage.setItem('grafana.grafana-setupguide-app.banners.free', 'false');
-        localStorage.setItem('grafana.navigation.docked', 'false');
-        localStorage.setItem('grafana.grafana-setupguide-app.modals.plan-picker', 'false');
-    });
 
     console.log('Starting shared MJPEG server...');
     const clients: http.ServerResponse[] = [];
@@ -184,16 +168,14 @@ if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
                 await page.reload({waitUntil: 'networkidle'});
                 await captureFrame();
                 clients.forEach(client => sendFrame(client));
-                res.writeHead(200, {'Content-Type': 'text/plain'});
-                res.end('Refreshed');
             } catch (e) {
                 console.error('Refresh error:', e);
                 res.writeHead(500, {'Content-Type': 'text/plain'});
                 res.end('Refresh failed');
+                return;
             } finally {
                 captureEnabled = true;
             }
-            return;
         }
 
         res.writeHead(200, {
