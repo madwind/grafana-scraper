@@ -1,4 +1,4 @@
-FROM node:26.8-trixie-slim
+FROM node:26.9-trixie-slim
 
 WORKDIR /app
 
@@ -10,7 +10,5 @@ RUN npm ci && \
     npx playwright install --with-deps --only-shell chromium
 
 COPY main.ts http-listener.ts version.ts ./
-
-USER node
 
 CMD ["npm", "start"]

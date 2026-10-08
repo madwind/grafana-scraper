@@ -63,7 +63,7 @@ https://grafana.ak3s.de/refresh?token=user1-token
 
 服务仅监听 Unix socket，不再使用 `HTTP_PORT` 或暴露 TCP 端口。启动时清理遗留 socket，正常退出时关闭连接并移除 socket。程序不创建目录或修改目录权限，目录必须由部署环境提前准备；已被其它服务监听的 socket 或同名普通文件不会被覆盖。
 
-Kubernetes 部署与其它项目一致：将宿主机 `/dev/shm/grafana-scraper` 挂载到服务的 `/run/grafana-scraper`，nginx 以只读方式挂载同一目录，两者须运行在同一节点。root initContainer 将目录属主设为 `1000:1000`、权限设为 `0755`；镜像通过 `USER node` 指定 Node 用户（UID/GID `1000`），chart 使用镜像默认启动命令。程序使用 Node 的 `readableAll` 和 `writableAll` 选项，让新创建的 socket 权限为 `0777`，供 nginx worker 连接。Playwright 浏览器统一安装到 `/ms-playwright`，供非 root 用户读取。
+Kubernetes 部署与其它项目一致：将宿主机 `/dev/shm/grafana-scraper` 挂载到服务的 `/run/grafana-scraper`，nginx 以只读方式挂载同一目录，两者须运行在同一节点。root initContainer 将目录属主设为 `65532:65532`、权限设为 `0755`，并将已有真实 socket 的权限设为 `0777`，让非 root 用户可以探测并清理遗留 socket。chart 通过 `securityContext` 指定主容器以 UID/GID `65532` 运行，并使用镜像默认启动命令。程序使用 Node 的 `readableAll` 和 `writableAll` 选项，让新创建的 socket 权限为 `0777`，供 nginx worker 连接。Playwright 浏览器统一安装到 `/ms-playwright`，供非 root 用户读取。本地直接运行容器时，可使用 `--user 65532:65532` 并提前准备好 socket 目录。
 
 ```nginx
 location / {
