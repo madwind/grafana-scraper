@@ -9,6 +9,6 @@ COPY package.json package-lock.json ./
 RUN npm ci && \
     npx playwright install --with-deps --only-shell chromium
 
-COPY main.ts http-listener.ts version.ts ./
+COPY main.ts version.ts ./
 
 CMD ["npm", "start"]

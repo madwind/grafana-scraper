@@ -1,7 +1,7 @@
 import {chromium} from 'playwright';
+import {once} from 'node:events';
 import * as http from 'node:http';
 import {VERSION} from "./version.ts";
-import {listenHttpServer} from './http-listener.ts';
 
 const env = process.env;
 
@@ -21,7 +21,8 @@ const CSS_SELECTOR = env.CSS_SELECTOR ?? 'body'
 const viewportHeight = Number(env.VIEWPORT_HEIGHT ?? 2560);
 const quality = Number(env.QUALITY ?? 30);
 const interval = Number(env.CAPTURE_INTERVAL ?? 10000);
-const socketPath = env.HTTP_SOCKET ?? '/run/grafana-scraper/grafana-scraper.sock';
+const httpHost = '127.0.0.1';
+const httpPort = Number(env.HTTP_PORT ?? 18085);
 
 function parseTokens(...values: Array<string | undefined>): Set<string> {
     return new Set(
@@ -36,6 +37,11 @@ const TOKENS = parseTokens(env.TOKENS);
 
 if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
     console.error('Error: DASHBOARD_URL, GRAFANA_MAIL, and GRAFANA_PASSWORD must be set.');
+    process.exit(1);
+}
+
+if (!Number.isInteger(httpPort) || httpPort < 1 || httpPort > 65535) {
+    console.error('Error: HTTP_PORT must be an integer between 1 and 65535.');
     process.exit(1);
 }
 
@@ -194,8 +200,8 @@ if (!DASHBOARD_URL || !GRAFANA_MAIL || !GRAFANA_PASSWORD) {
         });
     });
 
-    await listenHttpServer(server, socketPath);
-    console.log(`MJPEG server started on Unix socket ${socketPath}`);
+    await once(server.listen(httpPort, httpHost), 'listening');
+    console.log(`MJPEG server listening on http://${httpHost}:${httpPort}`);
 
     const shutdown = async () => {
         if (shuttingDown) return;

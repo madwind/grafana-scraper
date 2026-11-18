@@ -33,7 +33,7 @@ npm start
 | `VIEWPORT_HEIGHT`  | 浏览器视口高度（需 ≥ `CLIP_TOP + CLIP_HEIGHT`，未设置时自动计算）              | 自动计算    | 否  |
 | `QUALITY`          | JPG 压缩质量（1–100，数值越小体积越小）                                    | `30`    | 否  |
 | `CAPTURE_INTERVAL` | 截图 / 帧更新间隔时间（毫秒），例如 `10000` = 10 秒一帧                        | `10000` | 否  |
-| `HTTP_SOCKET`      | HTTP 服务监听的 Unix socket 绝对路径，用于提供 MJPEG 视频流                   | `/run/grafana-scraper/grafana-scraper.sock` | 否 |
+| `HTTP_PORT`        | 本机 HTTP 端口，用于提供 MJPEG 视频流                                          | `18085` | 否  |
 | `BROWSER_LOCALE`   | 浏览器语言环境（修复 Grafana 图表崩溃问题），影响 `navigator.language`、Intl 格式化 | `en-US` | 否  |
 | `PROXY_SERVER`     | 浏览器使用的代理服务器（如 `http://host:port`）                           | 无       | 否  |
 | `HEADLESS`         | 是否启用无头模式（`true` / `false`）                                  | `true`  | 否  |
@@ -59,11 +59,11 @@ https://grafana.ak3s.de/?token=user1-token
 https://grafana.ak3s.de/refresh?token=user1-token
 ```
 
-### Unix socket 与 nginx
+### 本机 HTTP 与 Nginx
 
-服务仅监听 Unix socket，不再使用 `HTTP_PORT` 或暴露 TCP 端口。启动时清理遗留 socket，正常退出时关闭连接并移除 socket。程序不创建目录或修改目录权限，目录必须由部署环境提前准备；已被其它服务监听的 socket 或同名普通文件不会被覆盖。
+从 `3.0.0` 起，服务通过 TCP 提供 HTTP，默认监听 `127.0.0.1:18085`。从旧版 Unix socket 部署升级时，将镜像和 Nginx 上游一起切换，并移除共享挂载及目录权限初始化。
 
-Kubernetes 部署与其它项目一致：将宿主机 `/dev/shm/grafana-scraper` 挂载到服务的 `/run/grafana-scraper`，nginx 以只读方式挂载同一目录，两者须运行在同一节点。root initContainer 将目录属主设为 `65532:65532`、权限设为 `0755`，并将已有真实 socket 的权限设为 `0777`，让非 root 用户可以探测并清理遗留 socket。chart 通过 `securityContext` 指定主容器以 UID/GID `65532` 运行，并使用镜像默认启动命令。程序使用 Node 的 `readableAll` 和 `writableAll` 选项，让新创建的 socket 权限为 `0777`，供 nginx worker 连接。Playwright 浏览器统一安装到 `/ms-playwright`，供非 root 用户读取。本地直接运行容器时，可使用 `--user 65532:65532` 并提前准备好 socket 目录。
+K3s 将 Grafana Scraper 和 Nginx 部署到同一节点，两者通过 `hostNetwork` 共享节点的回环地址。Scraper 继续以 UID/GID `65532` 运行，Playwright 浏览器安装在 `/ms-playwright`。调整 `HTTP_PORT` 时同步更新 Nginx 上游端口。Nginx 关闭响应缓冲以便逐帧转发 MJPEG。
 
 ```nginx
 location / {
@@ -75,12 +75,12 @@ location / {
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_buffering off;
     proxy_read_timeout 300s;
-    proxy_pass http://unix:/run/grafana-scraper/grafana-scraper.sock;
+    proxy_pass http://127.0.0.1:18085;
 }
 ```
 
-本地 Linux 调试可使用：
+在服务所在的网络命名空间内可直接请求刷新接口：
 
 ```bash
-curl --unix-socket /run/grafana-scraper/grafana-scraper.sock 'http://localhost/refresh?token=user1-token'
+curl -N 'http://127.0.0.1:18085/refresh?token=user1-token'
 ```
