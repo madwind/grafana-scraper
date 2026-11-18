@@ -21,7 +21,7 @@ const CSS_SELECTOR = env.CSS_SELECTOR ?? 'body'
 const viewportHeight = Number(env.VIEWPORT_HEIGHT ?? 2560);
 const quality = Number(env.QUALITY ?? 30);
 const interval = Number(env.CAPTURE_INTERVAL ?? 10000);
-const httpHost = '127.0.0.1';
+const httpHost = env.HTTP_HOST?.trim() || '127.0.0.1';
 const httpPort = Number(env.HTTP_PORT ?? 18085);
 
 function parseTokens(...values: Array<string | undefined>): Set<string> {

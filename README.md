@@ -33,6 +33,7 @@ npm start
 | `VIEWPORT_HEIGHT`  | 浏览器视口高度（需 ≥ `CLIP_TOP + CLIP_HEIGHT`，未设置时自动计算）              | 自动计算    | 否  |
 | `QUALITY`          | JPG 压缩质量（1–100，数值越小体积越小）                                    | `30`    | 否  |
 | `CAPTURE_INTERVAL` | 截图 / 帧更新间隔时间（毫秒），例如 `10000` = 10 秒一帧                        | `10000` | 否  |
+| `HTTP_HOST`        | HTTP 监听地址。设为 `0.0.0.0` 可监听所有 IPv4 网卡                             | `127.0.0.1` | 否  |
 | `HTTP_PORT`        | 本机 HTTP 端口，用于提供 MJPEG 视频流                                          | `18085` | 否  |
 | `BROWSER_LOCALE`   | 浏览器语言环境（修复 Grafana 图表崩溃问题），影响 `navigator.language`、Intl 格式化 | `en-US` | 否  |
 | `PROXY_SERVER`     | 浏览器使用的代理服务器（如 `http://host:port`）                           | 无       | 否  |
@@ -64,6 +65,8 @@ https://grafana.ak3s.de/refresh?token=user1-token
 从 `3.0.0` 起，服务通过 TCP 提供 HTTP，默认监听 `127.0.0.1:18085`。从旧版 Unix socket 部署升级时，将镜像和 Nginx 上游一起切换，并移除共享挂载及目录权限初始化。
 
 K3s 将 Grafana Scraper 和 Nginx 部署到同一节点，两者通过 `hostNetwork` 共享节点的回环地址。Scraper 继续以 UID/GID `65532` 运行，Playwright 浏览器安装在 `/ms-playwright`。调整 `HTTP_PORT` 时同步更新 Nginx 上游端口。Nginx 关闭响应缓冲以便逐帧转发 MJPEG。
+
+使用普通 Pod 网络和 `hostPort` 时，将 Scraper 的 `HTTP_HOST` 设为 `0.0.0.0`，以接收转发到 Pod IP 的请求。若入口只给同节点的 Nginx 使用，将 `hostIP` 设为 `127.0.0.1`。
 
 ```nginx
 location / {
